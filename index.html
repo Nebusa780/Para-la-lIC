@@ -1,0 +1,1381 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bajo las estrellas</title>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#fffaf0;
+    --ink:#2b2140;
+    --env:#efe2cb;
+    --env-2:#e4d3b6;
+    --env-3:#d9c5a3;
+    --seal:#b3264f;
+    --night:#05031a;
+    --lila:#d9ccff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{overflow-x:hidden}
+  body{overflow-x:hidden;background:var(--night);color:#fff;font-family:'Cormorant Garamond',Georgia,serif}
+
+  #world{position:relative;z-index:1}
+  #tiles,#twinkles{position:absolute;left:0;top:0;width:100%;z-index:0;pointer-events:none;overflow:hidden}
+  #fx{position:fixed;left:0;top:0;z-index:1;pointer-events:none}
+  .intro,.gap,.finale,.moon-sec,.album-sec,.end-sec{position:relative;z-index:2}
+  .intro{height:var(--vh,100vh)}
+  .gap{height:calc(var(--vh,100vh) * .8)}
+  .finale{height:var(--vh,100vh);overflow:hidden}
+  .tw{position:absolute;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor;opacity:.4;
+    animation:tw var(--d) ease-in-out var(--dl) infinite}
+  .tw.x::before,.tw.x::after{content:'';position:absolute;left:50%;top:50%;background:currentColor;opacity:.5;transform:translate(-50%,-50%)}
+  .tw.x::before{width:700%;height:1px}
+  .tw.x::after{width:1px;height:700%}
+  @keyframes tw{0%,100%{opacity:.3}50%{opacity:1}}
+  .more-hint{position:absolute;right:18px;bottom:12px;z-index:5;text-align:center;text-shadow:0 0 8px #000;color:var(--lila);font-size:15px;letter-spacing:.08em;opacity:.8;pointer-events:none}
+  .more-hint .arrow{display:block;font-size:20px;animation:bob 1.8s ease-in-out infinite}
+  .scroll-hint{position:absolute;left:0;right:0;bottom:5vh;text-align:center;color:var(--lila);font-size:18px;letter-spacing:.08em;
+    opacity:0;animation:fadeIn 2s 2.5s forwards;pointer-events:none}
+  .scroll-hint .arrow{display:block;font-size:26px;margin-top:6px;animation:bob 1.8s ease-in-out infinite}
+  .subtitle{position:absolute;left:0;right:0;top:calc(14vh + clamp(48px,10vw,90px));text-align:center;padding:0 24px;
+    font-style:italic;font-size:clamp(18px,3.4vw,24px);color:#e9dcff;opacity:0;animation:fadeIn 2.5s 1.4s forwards;text-shadow:0 0 12px rgba(150,100,255,.6)}
+
+  /* ---------- Suelo y siluetas ---------- */
+  .ground{position:absolute;left:0;right:0;bottom:0;height:clamp(190px,max(32vh,21vw),46vh);pointer-events:none;z-index:1}
+  .ground svg{width:100%;height:100%;display:block}
+
+  /* ---------- Jardín (flores) ---------- */
+  #garden{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;transition:opacity 1s}
+  #garden.fading{opacity:0}
+  #garden .petal,#garden .leaf,#garden .ystar,#garden .core{transform-box:view-box}
+
+  /* ---------- Título ---------- */
+  .title{position:absolute;top:14vh;left:0;right:0;text-align:center;font-family:'Dancing Script',cursive;z-index:3;
+    font-size:clamp(40px,9vw,84px);color:#fbe9ff;text-shadow:0 0 18px rgba(200,140,255,.8),0 0 40px rgba(120,90,255,.5);
+    pointer-events:none;opacity:0;animation:fadeIn 2.5s .4s forwards;padding:0 16px}
+
+  /* ---------- Sobre ---------- */
+  .scene{position:absolute;left:0;right:0;top:clamp(110px,22%,260px);display:flex;justify-content:center;padding:0 16px;z-index:4}
+  .env-wrap{animation:float 6s ease-in-out infinite;position:relative;display:flex;flex-direction:column;align-items:center}
+  .env{position:relative;width:min(320px,82vw);aspect-ratio:1.55;cursor:pointer;perspective:1200px;
+    filter:drop-shadow(0 18px 40px rgba(0,0,0,.6)) drop-shadow(0 0 30px rgba(170,120,255,.25))}
+  .env-back{position:absolute;inset:0;background:var(--env-3);border-radius:8px}
+  .letter{position:absolute;left:6%;right:6%;top:6%;height:88%;background:var(--paper);border-radius:4px;z-index:2;
+    color:var(--ink);text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:9%;
+    transition:transform .8s cubic-bezier(.2,.8,.2,1);
+    background-image:repeating-linear-gradient(transparent 0 22px,rgba(120,100,170,.12) 22px 23px)}
+  .letter h2{font-family:'Dancing Script',cursive;font-size:clamp(24px,6vw,32px);color:#6b2d7a}
+  .letter p{font-style:italic;font-size:15px;opacity:.75;margin-top:4px}
+  .pocket{position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:8px}
+  .pocket.l{background:var(--env-2);clip-path:polygon(0 0,52% 56%,0 100%)}
+  .pocket.r{background:var(--env-2);clip-path:polygon(100% 0,48% 56%,100% 100%)}
+  .pocket.b{background:var(--env);clip-path:polygon(0 100%,50% 44%,100% 100%)}
+  .flap{position:absolute;left:0;right:0;top:0;height:60%;transform-origin:top center;z-index:4;
+    background:linear-gradient(180deg,#e9d9bd,var(--env-3));clip-path:polygon(0 0,100% 0,50% 100%);
+    transition:transform .7s cubic-bezier(.5,0,.3,1) .5s, z-index 0s .85s}
+  .seal{position:absolute;left:50%;top:60%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;z-index:5;
+    background:radial-gradient(circle at 35% 30%,#e0557e,var(--seal) 55%,#7a1534);display:grid;place-items:center;
+    color:#ffd6e2;font-size:22px;box-shadow:0 3px 8px rgba(0,0,0,.35),inset 0 0 0 4px rgba(255,255,255,.08);
+    transition:opacity .3s 1s, transform .3s 1s}
+  .env:hover .seal{transform:scale(1.06)}
+
+  /* abierto: primero la solapa, luego sale la carta */
+  .env.open .flap{transform:rotateX(180deg);z-index:1;transition:transform .7s cubic-bezier(.5,0,.3,1), z-index 0s .35s}
+  .env.open .seal{opacity:0;transform:scale(.6);transition:opacity .3s, transform .3s}
+  .env.open .letter{transform:translateY(-48%);transition:transform .9s .45s cubic-bezier(.2,.8,.2,1)}
+
+  .controls{margin-top:22px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;min-height:40px}
+  .hint{font-size:17px;letter-spacing:.06em;color:var(--lila);opacity:.85;animation:pulse 2.4s ease-in-out infinite;align-self:center}
+  .btn{font:600 16px 'Cormorant Garamond',Georgia,serif;letter-spacing:.05em;color:#fbe9ff;cursor:pointer;
+    padding:8px 18px;border-radius:999px;border:1px solid rgba(217,204,255,.45);background:rgba(40,22,90,.45);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:background .2s, transform .2s}
+  .btn:hover{background:rgba(110,60,190,.55);transform:translateY(-1px)}
+  .btn[hidden],.hint[hidden]{display:none}
+
+  /* ---------- Lector de la carta ---------- */
+  .reader{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:16px;
+    background:rgba(5,3,26,.55);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    opacity:0;pointer-events:none;transition:opacity .5s}
+  .reader.show{opacity:1;pointer-events:auto}
+  .paper{position:relative;width:min(560px,100%);max-height:84vh;overflow:auto;background:var(--paper);color:var(--ink);
+    border-radius:6px;padding:40px 34px 28px;box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 60px rgba(180,130,255,.25);
+    transform:translateY(30px) scale(.97);transition:transform .6s cubic-bezier(.2,.8,.2,1);
+    background-image:repeating-linear-gradient(transparent 0 31px,rgba(120,100,170,.10) 31px 32px)}
+  .reader.show .paper{transform:none}
+  .paper h1{font-family:'Dancing Script',cursive;font-size:clamp(30px,7vw,40px);color:#6b2d7a;margin-bottom:14px}
+  .paper p{font-size:19px;line-height:32px;margin-bottom:16px}
+  .paper .firma{font-family:'Dancing Script',cursive;font-size:28px;text-align:right;color:#6b2d7a;margin-top:10px}
+  .paper .pd{font-style:italic;font-size:17px;line-height:28px;margin-top:22px;padding-top:14px;border-top:1px dashed rgba(107,45,122,.3);color:#5a3a6e}
+  .close{position:absolute;top:10px;right:12px;width:36px;height:36px;border:0;border-radius:50%;background:transparent;
+    font-size:26px;line-height:1;color:#6b2d7a;cursor:pointer}
+  .close:hover{background:rgba(107,45,122,.08)}
+  .paper .actions{display:flex;justify-content:center;margin-top:18px}
+  .paper .btn{color:#fff;background:#6b2d7a;border-color:#6b2d7a}
+  .paper .btn:hover{background:#86399a}
+
+
+  /* ---------- Luna  Y 🌕 U ---------- */
+  .moon-sec{min-height:calc(var(--vh,100vh) * 1.15);display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:16vh 16px 8vh;--m:clamp(110px,27vw,290px)}
+  .you{display:flex;align-items:center;justify-content:center;gap:calc(var(--m) * .1)}
+  .L{width:calc(var(--m) * .85);height:var(--m);overflow:visible}
+  .L text{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:150px;fill:#fffaf0;fill-opacity:0;
+    stroke:#fffaf0;stroke-width:1.6;stroke-dasharray:760;stroke-dashoffset:760}
+  .you.show .L.y text{animation:draw 2.2s ease forwards, fillIn 1.2s 1.7s forwards}
+  .you.show .L.u text{animation:draw 2.2s 3.6s ease forwards, fillIn 1.2s 5.3s forwards}
+  .you.show .L.y{animation:glowL 4.5s 3s ease-in-out infinite}
+  .you.show .L.u{animation:glowL 4.5s 6.5s ease-in-out infinite}
+  .moon-wrap{position:relative;width:var(--m);height:var(--m);opacity:0;transform:scale(.82) translateY(16px)}
+  .moon-wrap::before{content:'';position:absolute;inset:-55%;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle,rgba(255,250,235,.30) 0%,rgba(220,215,255,.10) 32%,transparent 62%);animation:halo 6s ease-in-out infinite}
+  #moon{position:relative;width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 28px 3px rgba(255,248,230,.32)}
+  .you.show .moon-wrap{animation:moonIn 2.6s 1.9s cubic-bezier(.2,.8,.2,1) forwards, moonFloat 9s 4.6s ease-in-out infinite}
+  .moon-cap{margin-top:8vh;font-style:italic;font-size:clamp(18px,3.4vw,24px);color:#e9dcff;opacity:0;text-align:center;
+    text-shadow:0 0 12px rgba(150,100,255,.6)}
+  .you.show ~ .moon-cap{animation:fadeIn 2s 6.2s forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes fillIn{to{fill-opacity:1;stroke-width:.3}}
+  @keyframes glowL{0%,100%{filter:drop-shadow(0 0 5px rgba(255,250,235,.45))}50%{filter:drop-shadow(0 0 16px rgba(255,250,235,.95))}}
+  @keyframes moonIn{to{opacity:1;transform:none}}
+  @keyframes moonFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  @keyframes halo{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+
+  /* ---------- Álbum de fotos ---------- */
+  .album-sec{padding:8vh 16px 8vh;display:flex;flex-direction:column;align-items:center;text-align:center}
+  .album-sec h3{font-family:'Dancing Script',cursive;font-size:clamp(38px,8vw,64px);color:#fbe9ff;text-shadow:0 0 18px rgba(200,140,255,.7)}
+  .album-sub{font-style:italic;color:var(--lila);margin:6px 0 36px;font-size:18px}
+  .book{--pw:300px;--ph:420px;position:relative;width:calc(var(--pw) * 2);height:var(--ph);perspective:2400px;
+    transition:transform .9s cubic-bezier(.45,.05,.25,1)}
+  .book.at-front{transform:translateX(calc(var(--pw) * -.5))}
+  .book.at-back{transform:translateX(calc(var(--pw) * .5))}
+  .leaf{position:absolute;left:50%;top:0;width:50%;height:100%;transform-origin:left center;transform-style:preserve-3d;
+    transition:transform 1.1s cubic-bezier(.45,.05,.25,1);cursor:pointer}
+  .leaf.flipped{transform:rotateY(-180deg)}
+  .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;
+    box-shadow:0 6px 16px rgba(0,0,0,.2)}
+  .face.front{border-radius:2px 8px 8px 2px}
+  .face.back{transform:rotateY(180deg);border-radius:8px 2px 2px 8px}
+  .pg{position:absolute;inset:0;background-color:#fbf4e6;background-image:radial-gradient(rgba(150,120,80,.07) 1px,transparent 1px);background-size:6px 6px}
+  .pg.right{box-shadow:inset 22px 0 24px -16px rgba(60,30,10,.4)}
+  .pg.left{box-shadow:inset -22px 0 24px -16px rgba(60,30,10,.4)}
+  .pol{position:absolute;left:50%;top:47%;width:76%;margin:0;background:#fff;padding:6% 6% 0;box-shadow:0 8px 18px rgba(40,20,10,.28);
+    transform:translate(-50%,-50%) rotate(var(--r))}
+  .ph{width:100%;aspect-ratio:1;overflow:hidden;background:#e9e2f3}
+  .ph img{width:100%;height:100%;object-fit:cover;object-position:50% 30%;display:block}
+  .ph.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    background:linear-gradient(135deg,#2c1660,#7247b8 60%,#b58be0);color:#f6edff}
+  .ph.empty span{font-size:calc(var(--pw) * .12)}
+  .ph.empty b{font-family:'Dancing Script',cursive;font-size:calc(var(--pw) * .085)}
+  .ph.empty em{font-size:calc(var(--pw) * .045);opacity:.8}
+  .pol figcaption{font-family:'Dancing Script',cursive;color:#4a2a5e;font-size:calc(var(--pw) * .068);padding:4% 2% 6%;line-height:1.15;
+    min-height:calc(var(--pw) * .19);display:flex;align-items:center;justify-content:center}
+  .tape{position:absolute;top:-9px;left:50%;width:34%;height:20px;transform:translateX(-50%) rotate(-3deg);
+    background:rgba(214,190,255,.6);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .doodle{position:absolute;color:#9b78c9;opacity:.6;font-size:calc(var(--pw) * .07)}
+  .d1{top:5%;left:8%}.d2{bottom:5%;right:9%}
+  .pnum{position:absolute;bottom:3%;left:50%;transform:translateX(-50%);font-size:calc(var(--pw) * .045);color:#8a7a6a}
+  .cover{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%,#5a2a96,#2a1056 60%,#170834);padding:7%}
+  .cover-in{height:100%;border:2px solid rgba(243,212,139,.7);outline:1px solid rgba(243,212,139,.35);outline-offset:-9px;border-radius:4px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4%;color:#f3d48b;text-align:center;padding:8%}
+  .cover h4{font-family:'Dancing Script',cursive;font-weight:700;font-size:calc(var(--pw) * .14);line-height:1.05;text-shadow:0 0 12px rgba(243,212,139,.4)}
+  .cover p{font-style:italic;font-size:calc(var(--pw) * .062);color:#f1e4c4}
+  .cover small{margin-top:5%;font-size:calc(var(--pw) * .042);letter-spacing:.12em;opacity:.7;text-transform:uppercase}
+  .cover.end h4{font-size:calc(var(--pw) * .11)}
+  .c-moon{width:calc(var(--pw) * .2);height:calc(var(--pw) * .2);border-radius:50%;
+    box-shadow:inset calc(var(--pw) * -.055) calc(var(--pw) * -.015) 0 0 #f3d48b;transform:rotate(-20deg)}
+  .album-nav{margin-top:30px;display:flex;align-items:center;gap:18px;color:var(--lila);font-size:17px;min-width:220px;justify-content:center}
+  .album-nav .btn{width:46px;height:46px;padding:0;font-size:24px;display:grid;place-items:center}
+  .end-sec{padding:4vh 16px 14vh;text-align:center}
+  .end-sec .whisper{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:14px;line-height:1.6;letter-spacing:.04em;
+    color:#cbb8f0;max-width:420px;margin:46px auto 0;text-shadow:none;opacity:.6}
+  .whisper .w{display:inline-block;white-space:nowrap}
+  .whisper .c{display:inline-block;opacity:0;transform:translateY(6px);filter:blur(3px)}
+  .whisper.show .c{animation:charIn .9s cubic-bezier(.2,.8,.2,1) forwards;animation-delay:calc(var(--i) * 45ms)}
+  .whisper.glow{animation:whisperGlow 5s ease-in-out infinite}
+  @keyframes charIn{to{opacity:1;transform:none;filter:blur(0)}}
+  @keyframes whisperGlow{0%,100%{opacity:.5;text-shadow:0 0 0 rgba(200,160,255,0)}50%{opacity:.85;text-shadow:0 0 10px rgba(200,160,255,.6)}}
+  .end-sec p{font-family:'Dancing Script',cursive;font-size:clamp(28px,6vw,42px);color:#fbe9ff;margin-bottom:22px;text-shadow:0 0 14px rgba(200,140,255,.6)}
+
+  /* ---------- Música ---------- */
+  .music{position:fixed;top:14px;right:14px;z-index:30;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .music-btn{width:44px;height:44px;border-radius:50%;border:1px solid rgba(217,204,255,.45);background:rgba(40,22,90,.55);
+    color:#fbe9ff;font-size:20px;cursor:pointer;display:grid;place-items:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .music-btn.playing{animation:spin 6s linear infinite;box-shadow:0 0 18px rgba(190,140,255,.6)}
+  .music-panel{width:min(320px,calc(100vw - 28px));height:80px;border-radius:12px;overflow:hidden;
+    transition:opacity .3s, transform .3s;opacity:0;transform:translateY(-8px);pointer-events:none}
+  .music.expanded .music-panel{opacity:1;transform:none;pointer-events:auto}
+  .music-panel iframe{display:block;border:0;width:100%;height:80px}
+
+  /* ---------- Pantalla de inicio ---------- */
+  .start{position:fixed;inset:0;z-index:40;display:grid;place-items:center;text-align:center;padding:24px;cursor:pointer;
+    background:radial-gradient(ellipse at center,rgba(30,16,70,.82),rgba(4,2,20,.96));transition:opacity 1.2s, visibility 1.2s}
+  .start.gone{opacity:0;visibility:hidden}
+  .start h2{font-family:'Dancing Script',cursive;font-size:clamp(34px,8vw,60px);color:#fbe9ff;text-shadow:0 0 20px rgba(200,140,255,.8)}
+  .start p{margin-top:10px;font-style:italic;font-size:19px;color:var(--lila)}
+  .start .btn{margin-top:26px;font-size:19px;padding:10px 26px}
+
+  /* ---------- Luces de la escena ---------- */
+  .flicker{transform-box:fill-box;transform-origin:center;animation:flicker 2.6s ease-in-out infinite}
+  .flicker.f2{animation-duration:3.3s;animation-delay:-1s}
+  .flame{transform-box:fill-box;transform-origin:50% 100%;animation:flame .9s ease-in-out infinite alternate}
+  @keyframes flicker{0%,100%{opacity:.85;transform:scale(1)}30%{opacity:1;transform:scale(1.04)}55%{opacity:.75;transform:scale(.97)}80%{opacity:.95;transform:scale(1.02)}}
+  @keyframes flame{0%{transform:scaleY(1) skewX(0)}50%{transform:scaleY(1.15) skewX(4deg)}100%{transform:scaleY(.92) skewX(-4deg)}}
+
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+  @keyframes fadeIn{to{opacity:1}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+  @media (prefers-reduced-motion:reduce){.env-wrap,.hint,.music-btn.playing,.flicker,.flame{animation:none}}
+</style>
+</head>
+<body>
+
+<!-- Pantalla de inicio: el primer toque permite que suene la música -->
+<div class="start" id="start" role="button" tabindex="0" aria-label="Comenzar">
+  <div>
+    <h2>Tengo algo para ti liiiic💌</h2>
+    <p>Sube el volumen y toca para comenzar</p>
+    <button class="btn" type="button">Comenzar ✨</button>
+  </div>
+</div>
+
+<main id="world">
+<div id="tiles"></div>
+<div id="twinkles"></div>
+<canvas id="fx"></canvas>
+
+<section class="intro">
+
+<div class="title">Bajo el mismo cielo</div>
+<p class="subtitle">Mira hacia arriba… cada estrella guarda algo que quiero decirte</p>
+<div class="scroll-hint">Desliza hacia abajo<span class="arrow">↓</span></div>
+</section>
+
+<div class="gap"></div>
+
+<section class="finale" id="finale">
+
+<!-- Colinas, manta de picnic y la pareja de espaldas -->
+<div class="ground">
+  <svg id="sceneSvg" viewBox="200 0 1040 360" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#1b1638"/><stop offset="1" stop-color="#0c0a1e"/>
+      </linearGradient>
+      <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#110e22"/><stop offset="1" stop-color="#040309"/>
+      </linearGradient>
+      <!-- luz cálida de los faroles sobre el suelo -->
+      <radialGradient id="groundLight" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(760 330) scale(330 70)">
+        <stop offset="0" stop-color="#7a4d2a" stop-opacity=".55"/>
+        <stop offset="1" stop-color="#7a4d2a" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+        <stop offset="0" stop-color="#ffd38a" stop-opacity=".95"/>
+        <stop offset=".25" stop-color="#ffb055" stop-opacity=".45"/>
+        <stop offset="1" stop-color="#ff8a2a" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="flame" cx="50%" cy="70%" r="60%">
+        <stop offset="0" stop-color="#fffbe6"/>
+        <stop offset=".45" stop-color="#ffd36b"/>
+        <stop offset="1" stop-color="#ff8a1e"/>
+      </radialGradient>
+
+      <!-- tejido de la manta: rombos y zigzag -->
+      <pattern id="knit" width="34" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(-6)">
+        <rect width="34" height="26" fill="#5b3a46"/>
+        <rect y="0" width="34" height="3" fill="#3a2433"/>
+        <rect y="13" width="34" height="2" fill="#7d5560"/>
+        <path d="M0 8 L8.5 4 L17 8 L25.5 4 L34 8" fill="none" stroke="#b08a7c" stroke-width="1.6"/>
+        <path d="M0 21 L8.5 17 L17 21 L25.5 17 L34 21" fill="none" stroke="#2f1d2b" stroke-width="1.6"/>
+        <path d="M17 6.5 L20 10 L17 13.5 L14 10 Z" fill="#d1b39a" opacity=".55"/>
+        <circle cx="0" cy="10" r="1.2" fill="#d1b39a" opacity=".5"/>
+        <circle cx="34" cy="10" r="1.2" fill="#d1b39a" opacity=".5"/>
+      </pattern>
+      <pattern id="knitGround" width="40" height="18" patternUnits="userSpaceOnUse">
+        <rect width="40" height="18" fill="#4c3140"/>
+        <path d="M0 6 L10 3 L20 6 L30 3 L40 6" fill="none" stroke="#a07d71" stroke-width="1.4"/>
+        <path d="M0 14 L10 11 L20 14 L30 11 L40 14" fill="none" stroke="#2b1a27" stroke-width="1.4"/>
+        <rect y="8.5" width="40" height="1.5" fill="#6f4a57"/>
+      </pattern>
+      <!-- sombreado nocturno con luz cálida por los lados -->
+      <linearGradient id="blanketShade" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#ffb070" stop-opacity=".28"/>
+        <stop offset=".22" stop-color="#0a0716" stop-opacity=".35"/>
+        <stop offset=".55" stop-color="#0a0716" stop-opacity=".6"/>
+        <stop offset=".85" stop-color="#0a0716" stop-opacity=".35"/>
+        <stop offset="1" stop-color="#ffb070" stop-opacity=".32"/>
+      </linearGradient>
+      <linearGradient id="blanketTop" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#0a0716" stop-opacity=".1"/>
+        <stop offset="1" stop-color="#0a0716" stop-opacity=".55"/>
+      </linearGradient>
+      <!-- cabello con reflejo de luz -->
+      <linearGradient id="hairMan" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#4a2f22"/>
+        <stop offset=".25" stop-color="#1a1013"/>
+        <stop offset="1" stop-color="#0d080b"/>
+      </linearGradient>
+      <linearGradient id="hairWoman" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#0d080b"/>
+        <stop offset=".7" stop-color="#1c1115"/>
+        <stop offset="1" stop-color="#5a3826"/>
+      </linearGradient>
+      <linearGradient id="skin" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#8a5640"/>
+        <stop offset=".5" stop-color="#3a2420"/>
+        <stop offset="1" stop-color="#5c3829"/>
+      </linearGradient>
+      <!-- mimbre -->
+      <pattern id="wicker" width="10" height="8" patternUnits="userSpaceOnUse">
+        <rect width="10" height="8" fill="#4a3220"/>
+        <path d="M0 2 Q2.5 0 5 2 T10 2" fill="none" stroke="#8a6238" stroke-width="1.4"/>
+        <path d="M0 6 Q2.5 4 5 6 T10 6" fill="none" stroke="#6d4b2b" stroke-width="1.4"/>
+        <path d="M5 0 V8" stroke="#2c1d12" stroke-width=".8"/>
+      </pattern>
+      <linearGradient id="basketShade" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#0a0716" stop-opacity=".55"/>
+        <stop offset="1" stop-color="#ffb070" stop-opacity=".25"/>
+      </linearGradient>
+      <linearGradient id="bagShade" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#15131f"/>
+        <stop offset="1" stop-color="#3b2f30"/>
+      </linearGradient>
+      <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.2"/></filter>
+    </defs>
+
+    <!-- colinas -->
+    <path d="M0 215 C 180 178, 360 196, 520 208 C 700 222, 900 168, 1100 180 C 1260 190, 1360 202, 1440 194 L1440 360 L0 360 Z" fill="url(#hillBack)"/>
+    <path d="M0 292 C 220 262, 430 246, 720 250 C 1000 254, 1220 276, 1440 270 L1440 360 L0 360 Z" fill="url(#hillFront)"/>
+    <ellipse cx="760" cy="330" rx="330" ry="70" fill="url(#groundLight)"/>
+
+    <!-- manta de picnic extendida en el suelo -->
+    <path d="M548 360 C566 340 586 326 606 318 C680 306 820 306 900 318 C922 330 940 345 956 360 Z" fill="url(#knitGround)"/>
+    <path d="M548 360 C566 340 586 326 606 318 C680 306 820 306 900 318 C922 330 940 345 956 360 Z" fill="url(#blanketShade)"/>
+    <path d="M606 318 C680 306 820 306 900 318" fill="none" stroke="#c39a82" stroke-opacity=".35" stroke-width="1.5"/>
+
+    <!-- bolso (izquierda) -->
+    <g>
+      <path d="M520 268 C520 248 548 248 548 268" fill="none" stroke="#3c3446" stroke-width="3.5"/>
+      <path d="M512 270 L556 270 L560 322 L508 322 Z" fill="url(#bagShade)"/>
+      <path d="M512 270 L556 270 L557 280 L511 280 Z" fill="#000" opacity=".2"/>
+      <path d="M552 272 L557 320" stroke="#ffcf96" stroke-opacity=".35" stroke-width="1.5"/>
+    </g>
+
+    <!-- canasta con luz (izquierda) -->
+    <g>
+      <ellipse class="flicker" cx="606" cy="292" rx="95" ry="80" fill="url(#glow)" style="mix-blend-mode:screen"/>
+      <path d="M576 280 C576 236 638 236 638 280" fill="none" stroke="#7a5532" stroke-width="4"/>
+      <path d="M576 280 C576 236 638 236 638 280" fill="none" stroke="#e8b27a" stroke-opacity=".45" stroke-width="1.2"/>
+      <!-- frasco con vela dentro -->
+      <rect x="596" y="270" width="20" height="22" rx="4" fill="#ffe2a6" opacity=".35"/>
+      <path class="flame" d="M606 268 C602 276 602 282 606 284 C610 282 610 276 606 268 Z" fill="url(#flame)"/>
+      <path d="M570 282 L644 282 L638 324 L576 324 Z" fill="url(#wicker)"/>
+      <path d="M570 282 L644 282 L638 324 L576 324 Z" fill="url(#basketShade)"/>
+      <path d="M568 279 H646 V286 H568 Z" fill="#8a6238"/>
+      <path d="M568 279 H646" stroke="#ffd59a" stroke-opacity=".7" stroke-width="1.5"/>
+    </g>
+
+    <!-- ======= PAREJA ======= -->
+    <!-- sombra en la manta -->
+    <ellipse cx="742" cy="338" rx="120" ry="12" fill="#05030b" opacity=".55" filter="url(#soft)"/>
+
+    <!-- cuello del chico -->
+    <path d="M693 206 C694 218 694 228 692 236 L722 236 C719 228 718 218 719 206 Z" fill="url(#skin)"/>
+    <!-- cabeza del chico (cabello corto, de espaldas) -->
+    <g>
+      <path d="M680 192 C678 198 680 204 684 205 C686 201 686 195 684 190 Z" fill="#8a5640"/>
+      <path d="M732 192 C734 198 732 204 728 205 C726 201 726 195 728 190 Z" fill="#4a2e24"/>
+      <path d="M683 190 C681 168 692 156 706 156 C721 156 732 168 729 190 C728 203 722 212 706 213 C690 212 684 203 683 190 Z" fill="url(#hairMan)"/>
+      <!-- textura del cabello -->
+      <g fill="none" stroke="#3a2620" stroke-width="1.1" stroke-linecap="round" opacity=".9">
+        <path d="M690 166 C694 172 696 180 695 190"/>
+        <path d="M699 160 C702 170 703 182 701 196"/>
+        <path d="M709 159 C711 170 711 184 709 200"/>
+        <path d="M718 162 C720 172 720 186 717 199"/>
+        <path d="M725 172 C726 182 725 192 722 203"/>
+        <path d="M686 182 C688 190 690 198 694 206"/>
+      </g>
+      <path d="M684 176 C683 186 685 198 690 207" fill="none" stroke="#c98a5c" stroke-opacity=".55" stroke-width="1.4"/>
+      <!-- remolinos en la parte superior -->
+      <path d="M692 160 C696 152 704 150 712 152 C708 154 704 156 700 160" fill="#1a1013"/>
+      <path d="M714 155 C720 154 726 158 728 164 C724 161 719 159 714 158 Z" fill="#1a1013"/>
+    </g>
+
+    <!-- cabeza de la chica (cabello largo, inclinada hacia él) -->
+    <g transform="rotate(-9 774 214)">
+      <path d="M756 202 C754 182 764 170 776 170 C789 170 798 182 796 202 C795 214 792 224 788 232 C794 254 792 276 786 300 C782 310 774 312 770 300 C764 278 762 254 762 234 C757 224 756 212 756 202 Z" fill="url(#hairWoman)"/>
+      <!-- mechones -->
+      <g fill="none" stroke="#3b262a" stroke-width="1.1" stroke-linecap="round" opacity=".9">
+        <path d="M770 176 C766 192 766 212 768 234"/>
+        <path d="M778 173 C777 194 776 222 776 260"/>
+        <path d="M786 178 C788 198 788 228 782 290"/>
+        <path d="M762 194 C762 210 764 226 768 246"/>
+        <path d="M791 196 C792 216 790 240 786 270"/>
+      </g>
+      <path d="M794 190 C796 206 792 224 788 236 C794 256 791 280 785 300" fill="none" stroke="#d08f5c" stroke-opacity=".6" stroke-width="1.5"/>
+      <!-- liga del cabello -->
+      <path d="M763 232 C772 236 782 236 790 232" fill="none" stroke="#2a1520" stroke-width="3"/>
+    </g>
+
+    <!-- manta que los envuelve a los dos -->
+    <g>
+      <path id="wrap" d="M632 340 C634 300 644 262 664 240 C676 222 692 215 708 216 C722 217 736 228 748 231 C760 230 772 230 786 234 C804 240 816 256 824 280 C832 304 840 326 850 342 C800 350 690 350 632 340 Z" fill="url(#knit)"/>
+      <path d="M632 340 C634 300 644 262 664 240 C676 222 692 215 708 216 C722 217 736 228 748 231 C760 230 772 230 786 234 C804 240 816 256 824 280 C832 304 840 326 850 342 C800 350 690 350 632 340 Z" fill="url(#blanketShade)"/>
+      <path d="M632 340 C634 300 644 262 664 240 C676 222 692 215 708 216 C722 217 736 228 748 231 C760 230 772 230 786 234 C804 240 816 256 824 280 C832 304 840 326 850 342 C800 350 690 350 632 340 Z" fill="url(#blanketTop)"/>
+      <!-- pliegues -->
+      <g fill="none" stroke-linecap="round">
+        <path d="M748 236 C744 270 746 306 754 344" stroke="#0a0614" stroke-opacity=".7" stroke-width="3"/>
+        <path d="M751 236 C748 270 750 306 758 344" stroke="#c49c86" stroke-opacity=".18" stroke-width="1"/>
+        <path d="M676 246 C668 274 664 306 664 338" stroke="#0a0614" stroke-opacity=".45" stroke-width="2.4"/>
+        <path d="M702 236 C700 270 704 304 712 340" stroke="#0a0614" stroke-opacity=".35" stroke-width="2"/>
+        <path d="M800 246 C806 276 812 308 820 338" stroke="#0a0614" stroke-opacity=".45" stroke-width="2.4"/>
+        <path d="M776 240 C778 276 782 310 790 342" stroke="#0a0614" stroke-opacity=".35" stroke-width="2"/>
+      </g>
+      <!-- borde de la manta y flecos -->
+      <path d="M664 240 C676 222 692 215 708 216 C722 217 736 228 748 231 C760 230 772 230 786 234 C804 240 816 256 824 280" fill="none" stroke="#d6b39b" stroke-opacity=".28" stroke-width="2"/>
+      <path d="M632 340 C634 300 644 262 664 240" fill="none" stroke="#ffc184" stroke-opacity=".5" stroke-width="1.8"/>
+      <path d="M824 280 C832 304 840 326 850 342" fill="none" stroke="#ffc184" stroke-opacity=".55" stroke-width="1.8"/>
+      <g stroke="#b48e7c" stroke-opacity=".5" stroke-width="1">
+        <path d="M640 341 l-1 6"/><path d="M652 343 l-1 6"/><path d="M664 344 l0 6"/><path d="M676 345 l0 6"/>
+        <path d="M812 345 l0 6"/><path d="M824 344 l1 6"/><path d="M836 343 l1 6"/><path d="M846 342 l1 6"/>
+      </g>
+    </g>
+    <!-- pelo de la chica cayendo sobre la manta (por delante) -->
+    <g transform="rotate(-9 774 214)">
+      <path d="M763 234 C772 238 782 238 789 234 C793 256 790 280 785 300 C781 310 773 312 769 300 C764 280 762 256 763 234 Z" fill="url(#hairWoman)"/>
+      <g fill="none" stroke="#3b262a" stroke-width="1" opacity=".9">
+        <path d="M770 240 C768 260 770 282 773 302"/>
+        <path d="M778 239 C778 262 779 284 778 306"/>
+        <path d="M785 240 C787 262 785 284 782 300"/>
+      </g>
+      <path d="M789 236 C793 256 790 280 785 300" fill="none" stroke="#d08f5c" stroke-opacity=".6" stroke-width="1.4"/>
+    </g>
+
+    <!-- farol (derecha) -->
+    <g>
+      <ellipse class="flicker f2" cx="908" cy="312" rx="110" ry="90" fill="url(#glow)" style="mix-blend-mode:screen"/>
+      <path d="M900 278 C900 270 916 270 916 278" fill="none" stroke="#2a2018" stroke-width="2"/>
+      <path d="M896 282 L920 282 L916 288 L900 288 Z" fill="#3a2a1c"/>
+      <rect x="899" y="288" width="18" height="28" rx="2" fill="#ffe7b0" opacity=".45"/>
+      <path class="flame" d="M908 292 C903 300 903 308 908 311 C913 308 913 300 908 292 Z" fill="url(#flame)"/>
+      <path d="M899 288 V316 M917 288 V316 M908 288 V292" stroke="#2a2018" stroke-width="1.6"/>
+      <rect x="895" y="316" width="26" height="6" rx="1.5" fill="#3a2a1c"/>
+    </g>
+
+    <!-- pasto (se genera con JS) -->
+    <g id="grass"></g>
+  </svg>
+</div>
+
+<!-- Flores (se generan al abrir la carta) -->
+<svg id="garden" aria-hidden="true">
+  <defs>
+    <radialGradient id="petalGrad" cx="50%" cy="100%" r="100%">
+      <stop offset="0" stop-color="#4b1580"/>
+      <stop offset=".55" stop-color="#8e3fd6"/>
+      <stop offset="1" stop-color="#c79bff"/>
+    </radialGradient>
+    <radialGradient id="petalGrad2" cx="50%" cy="100%" r="100%">
+      <stop offset="0" stop-color="#5d1d9a"/>
+      <stop offset="1" stop-color="#b47cff"/>
+    </radialGradient>
+    <radialGradient id="coreGrad">
+      <stop offset="0" stop-color="#fff6b0"/>
+      <stop offset="1" stop-color="#f2b705"/>
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.2" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g id="flowers"></g>
+</svg>
+
+<!-- Sobre -->
+<div class="scene">
+  <div class="env-wrap" id="envWrap">
+    <div class="env" id="env" role="button" tabindex="0" aria-label="Abrir la carta">
+      <div class="env-back"></div>
+      <div class="letter">
+        <h2>Para ti ✨</h2>
+        <p>toca para leer</p>
+      </div>
+      <div class="pocket l"></div>
+      <div class="pocket r"></div>
+      <div class="pocket b"></div>
+      <div class="flap"></div>
+      <div class="seal">♥</div>
+    </div>
+    <div class="controls">
+      <span class="hint" id="hint">Toca el sobre para abrir la carta</span>
+      <button class="btn" id="btnRead" hidden>Leer la carta</button>
+      <button class="btn" id="btnClose" hidden>Cerrar la carta</button>
+    </div>
+  </div>
+</div>
+
+<div class="more-hint">Sigue bajando<span class="arrow">↓</span></div>
+</section>
+
+<!-- Luna: Y 🌕 U -->
+<section class="moon-sec">
+  <div class="you" id="you" aria-label="You">
+    <svg class="L y" viewBox="0 0 110 130" aria-hidden="true"><text x="55" y="114" text-anchor="middle">Y</text></svg>
+    <div class="moon-wrap"><canvas id="moon"></canvas></div>
+    <svg class="L u" viewBox="0 0 110 130" aria-hidden="true"><text x="55" y="114" text-anchor="middle">U</text></svg>
+  </div>
+  <p class="moon-cap">Lic asi se me dice la Luna cada vez que la veo</p>
+</section>
+
+<!-- Álbum de fotos -->
+<section class="album-sec">
+  <h3>Desde que pidio mi cel para una foto</h3>
+  <p class="album-sub">pasa las páginas tocando o deslizando</p>
+  <div class="book at-front" id="book"></div>
+  <div class="album-nav">
+    <button class="btn" id="albPrev" aria-label="Página anterior">‹</button>
+    <span id="albumCount">Portada</span>
+    <button class="btn" id="albNext" aria-label="Página siguiente">›</button>
+  </div>
+</section>
+
+<footer class="end-sec">
+  <p>Con cariño, siempre ♥</p>
+  <button class="btn" id="toTop">Volver a ver las estrellas ↑</button>
+  <p class="whisper" id="whisper">Si mañana no estoy, espero haberte hecho tan feliz que cada vez que te acuerdes de mí, sonrías.</p>
+</footer>
+</main>
+
+<!-- Carta completa -->
+<div class="reader" id="reader" aria-hidden="true">
+  <div class="paper" role="dialog" aria-label="Carta">
+    <button class="close" id="closeX" aria-label="Cerrar">×</button>
+
+    <!-- ✏️ ESCRIBE AQUÍ TU CARTA: cambia el título, los párrafos y la firma -->
+    <h1>Para la mejor y única Lic, que es tan especial:</h1>
+    <p>Si estás leyendo esto, quizá sea una de esas noches en las que la mente no se calla, en las que le das vueltas y vueltas a todo y el sueño simplemente no llega. Si es así, quiero que te asegures de que no sea un chulupi el que no te deja dormir; si no, respira despacio y déjame acompañarte un ratito con estas palabras.</p>
+    <p>Desde el primer día que la vi… quedé pensativo, preguntándome si alguna vez había visto algo tan hermoso (no se ría). Tal vez se lo han dicho demasiado, pero yo espero demostrárselo con recuerdos y momentos.</p>
+    <p>Cuando usted se sienta sola, tal vez deprimida o angustiada, piense que esta carta fue hecha por y para ti. No aguantaría verla tan triste, o incluso llorando, por algo que no lo vale.</p>
+    <p>Su sonrisa de punta a punta alegra a cualquier persona, Lic. Su personalidad tan cariñosa y tierna a la vez, su carita de ángel y sus manos tan suaves me desesperan. Lic, usted es toda una diosa… Con tan solo verla de vestido, desde pequeña hasta el último, el rojo, supe que tiene una gran mami que vela por usted y que la cuida mucho. Así que sola no está, y espero que esta carta tampoco la haga sentir sola.</p>
+    <p>Me encanta verla sonreír y estar animada, así que, aunque sus noches sean difíciles, incluso si amanece, permaneceré aquí… o tal vez mirando las estrellas, jajaja.</p>
+    <p class="firma">Lic, usted es increíblemente hermosa 💖</p>
+    <p class="pd">P.D.: Es tan inteligente que por cada detalle usted ya estaba por descubrirlo 😩</p>
+
+    <div class="actions"><button class="btn" id="btnStore">Guardar la carta en el sobre</button></div>
+  </div>
+</div>
+
+<!-- Música -->
+<div class="music" id="music">
+  <button class="music-btn" id="musicBtn" aria-label="Mostrar reproductor de música">♪</button>
+  <div class="music-panel"><div id="spotify"></div></div>
+</div>
+
+<script>
+/* ===================== CONFIGURACIÓN DE MÚSICA =====================
+   Canción de Spotify: "On Melancholy Hill" – Gorillaz. Suena desde el primer
+   toque (pantalla de inicio) y se repite sola al terminar.
+==================================================================== */
+const SPOTIFY_URI = 'spotify:track:0q6LuUqGLUiCPP1cbdwFs3';
+
+/* ===================== ÁLBUM DE FOTOS =====================
+   Las fotos van en la MISMA carpeta que este archivo: foto1.jpg, foto2.jpg…
+   ➜ Para agregar más, solo sube foto8.jpg, foto9.jpg, foto10.jpg… (en orden,
+     sin saltarte números) y aparecerán solas en el álbum.
+   ➜ Debajo de cada foto se muestra la fecha en que se tomó y el álbum se
+     ordena solo: las más antiguas primero. Si la foto nueva conserva su
+     fecha original (subida directo del celular), se lee sola; si no, ponla
+     aquí en la lista con su fecha.
+=========================================================== */
+const ALBUM_TITULO = 'Pequeño álbum';
+const ALBUM_SUBTITULO = 'Odiosa';
+const FOTOS = [
+  // fecha: 'AAAA-MM-DD' (y la hora si quieres, para ordenar fotos del mismo día)
+  { src: 'foto1.jpg', fecha: '2026-09-18' },
+  { src: 'foto2.jpg', fecha: '2026-09-21' },
+  { src: 'foto3.jpg', fecha: '2026-10-05 16:24:11' },
+  { src: 'foto4.jpg', fecha: '2026-09-30 11:09:32' },
+  { src: 'foto5.jpg', fecha: '2026-10-05 16:24:34' },
+  { src: 'foto6.jpg', fecha: '' },   // ← escribe aquí su fecha
+  { src: 'foto7.jpg', fecha: '' },   // ← escribe aquí su fecha
+  { src: 'foto8.jpg', fecha: '2026-10-08 10:25:46' },
+  { src: 'foto9.jpg', fecha: '' },   // ← escribe aquí su fecha
+];
+
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+(() => {
+  /* ================= Cielo: Vía Láctea + estrellas =================
+     El cielo se pinta en trozos que forman parte de la página, así se
+     mueve exactamente junto con el dedo al deslizar (sin desfase). */
+  const world = document.getElementById('world');
+  const tilesEl = document.getElementById('tiles');
+  const twEl = document.getElementById('twinkles');
+  const fx = document.getElementById('fx');
+  const ctx = fx.getContext('2d');
+  let W = 0, H = 0, dpr = 1, SKY_H = 0, DOC_H = 0, meteors = [];
+
+  const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function skyBottom() { const f = document.getElementById('finale'); return f.offsetTop + f.offsetHeight; }
+
+  function buildSky() {
+    W = document.documentElement.clientWidth;
+    DOC_H = world.offsetHeight;
+    SKY_H = skyBottom();
+    const VH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--vh')) || window.innerHeight;
+    const tdpr = Math.min(window.devicePixelRatio || 1, W > 900 ? 1.25 : 2);
+
+    // --- elementos del cielo (en coordenadas de la página) ---
+    const x1 = -0.15 * W, y1 = 0.97 * SKY_H, x2 = 1.15 * W, y2 = 0;
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+    const nx = -dy / len, ny = dx / len;
+    const bw = Math.max(W, VH) * 0.12;
+    const onBand = (spread) => { const t = Math.random(), o = gauss() * bw * spread;
+      return [x1 + dx * t + nx * o, y1 + dy * t + ny * o]; };
+    const k = SKY_H / VH;
+    const blobs = [];
+    const cols = ['rgba(150,80,255,', 'rgba(255,80,170,', 'rgba(60,190,255,', 'rgba(255,160,80,', 'rgba(80,255,210,', 'rgba(110,90,255,'];
+    for (let i = 0; i < 90 * k; i++) { const [x, y] = onBand(0.7); blobs.push([x, y, bw * rand(.4, 1.3), cols[i % cols.length], .11, 'lighter']); }
+    for (let i = 0; i < 40 * k; i++) { const [x, y] = onBand(0.25); blobs.push([x, y, bw * rand(.2, .5), 'rgba(255,235,225,', .07, 'lighter']); }
+    for (let i = 0; i < 45 * k; i++) { const [x, y] = onBand(0.18); blobs.push([x, y, bw * rand(.08, .25), 'rgba(6,3,24,', .4, 'source-over']); }
+    // orden: primero colores, luego polvo oscuro
+    const dust = [];
+    const tints = ['255,255,255', '200,220,255', '255,220,240', '220,200,255', '255,240,210'];
+    for (let i = 0; i < W * SKY_H / 300; i++) {
+      const [x, y] = Math.random() < 0.65 ? onBand(0.6) : [Math.random() * W, Math.random() * SKY_H];
+      dust.push([x, y, rand(.25, .9), `rgba(${tints[i % 5]},${rand(.2, .8).toFixed(2)})`]);
+    }
+    for (let i = 0; i < W * (DOC_H - SKY_H) / 1800; i++) {   // estrellas más suaves en la parte de abajo
+      dust.push([Math.random() * W, SKY_H + Math.random() * (DOC_H - SKY_H), rand(.25, .8), `rgba(${tints[i % 5]},${rand(.15, .6).toFixed(2)})`]);
+    }
+
+    // --- pintar en trozos ---
+    tilesEl.innerHTML = '';
+    tilesEl.style.height = DOC_H + 'px';
+    const TH = 1024;
+    for (let y0 = 0; y0 < DOC_H; y0 += TH) {
+      const th = Math.min(TH, DOC_H - y0);
+      const c = document.createElement('canvas');
+      c.width = Math.ceil(W * tdpr); c.height = Math.ceil(th * tdpr);
+      c.style.cssText = `position:absolute;left:0;top:${y0}px;width:${W}px;height:${th}px`;
+      const b = c.getContext('2d');
+      b.scale(tdpr, tdpr); b.translate(0, -y0);
+
+      const g = b.createLinearGradient(0, 0, 0, DOC_H);
+      const st = (y) => Math.min(1, Math.max(0, y / DOC_H));
+      g.addColorStop(0, '#03011a');
+      g.addColorStop(st(SKY_H * 0.6), '#0d0a35');
+      g.addColorStop(st(SKY_H * 0.97), '#22144a');
+      g.addColorStop(st(SKY_H), '#040309');
+      g.addColorStop(st(SKY_H + VH * 0.6), '#060414');
+      g.addColorStop(1, '#0b0822');
+      b.fillStyle = g; b.fillRect(0, y0, W, th);
+
+      b.save();
+      b.beginPath(); b.rect(0, 0, W, SKY_H); b.clip();
+      // resplandor cálido en el horizonte
+      b.save(); b.translate(W / 2, SKY_H - VH * 0.14); b.scale(1, 0.32);
+      const R = Math.max(W, VH) * 0.75;
+      const hz = b.createRadialGradient(0, 0, 0, 0, 0, R);
+      hz.addColorStop(0, 'rgba(255,160,90,.42)'); hz.addColorStop(.35, 'rgba(200,100,110,.18)'); hz.addColorStop(1, 'rgba(120,60,140,0)');
+      b.fillStyle = hz; b.beginPath(); b.arc(0, 0, R, 0, Math.PI * 2); b.fill(); b.restore();
+      for (const [x, y, r, col, a, mode] of blobs) {
+        if (y + r < y0 || y - r > y0 + th) continue;
+        b.globalCompositeOperation = mode;
+        const rg = b.createRadialGradient(x, y, 0, x, y, r);
+        rg.addColorStop(0, col + a + ')'); rg.addColorStop(1, col + '0)');
+        b.fillStyle = rg; b.beginPath(); b.arc(x, y, r, 0, Math.PI * 2); b.fill();
+      }
+      b.restore();
+      b.globalCompositeOperation = 'lighter';
+      for (const [x, y, r, col] of dust) {
+        if (y < y0 - 2 || y > y0 + th + 2) continue;
+        b.fillStyle = col; b.beginPath(); b.arc(x, y, r, 0, Math.PI * 2); b.fill();
+      }
+      tilesEl.appendChild(c);
+    }
+
+    // --- estrellas que titilan (elementos de la página, siempre sincronizadas) ---
+    const bright = ['#ffffff', '#bfe3ff', '#ffd1ea', '#d7c4ff', '#fff1c9', '#9ff5ff'];
+    let html = '';
+    const nSky = Math.min(380, W * SKY_H / 7000), nLow = Math.min(140, W * (DOC_H - SKY_H) / 16000);
+    const add = (x, y) => {
+      const s = rand(1.2, 3.4), big = s > 2.6;
+      html += `<i class="tw${big ? ' x' : ''}" style="left:${x.toFixed(0)}px;top:${y.toFixed(0)}px;width:${s.toFixed(1)}px;height:${s.toFixed(1)}px;color:${bright[(Math.random() * 6) | 0]};--d:${rand(1.6, 4.2).toFixed(2)}s;--dl:-${rand(0, 4).toFixed(2)}s"></i>`;
+    };
+    for (let i = 0; i < nSky; i++) { const [x, y] = Math.random() < 0.5 ? onBand(0.8) : [Math.random() * W, Math.random() * (SKY_H - VH * 0.2)]; if (x > 0 && x < W && y > 0) add(x, y); }
+    for (let i = 0; i < nLow; i++) add(Math.random() * W, SKY_H + VH * 0.15 + Math.random() * (DOC_H - SKY_H - VH * 0.15));
+    twEl.innerHTML = html;
+    twEl.style.height = DOC_H + 'px';
+  }
+
+  function sizeFx() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    H = window.innerHeight;
+    fx.width = Math.ceil(W * dpr); fx.height = Math.ceil(H * dpr);
+    fx.style.width = W + 'px'; fx.style.height = H + 'px';
+  }
+
+  /* ---- Lluvia de estrellas fugaces (efecto del video) ---- */
+  const ANG = 38 * Math.PI / 180;            // dirección: hacia abajo a la derecha
+  const DX = Math.cos(ANG), DY = Math.sin(ANG);
+  function newMeteor(t, initial) {
+    const life = rand(2.6, 4.2);
+    return {
+      x: rand(-0.35, 0.85) * W, y: rand(-0.25, 0.45) * H,
+      speed: rand(110, 190), tail: rand(90, 170), born: t - (initial ? rand(0, life) : rand(0, 0.6)), life,
+      hue: Math.random() < 0.8 ? '95,145,255' : '180,150,255'
+    };
+  }
+  function drawMeteors(t) {
+    const target = Math.round(Math.min(26, Math.max(10, W * H / 52000)));
+    if (!meteors.length) for (let i = 0; i < target; i++) meteors.push(newMeteor(t, true));
+    for (let i = 0; i < meteors.length; i++) {
+      let m = meteors[i];
+      let age = t - m.born;
+      if (age > m.life) { m = meteors[i] = newMeteor(t, false); age = t - m.born; }
+      if (age < 0) continue;
+      const p = age / m.life;
+      const hx = m.x + DX * m.speed * age, hy = m.y + DY * m.speed * age;
+      const tl = m.tail * Math.sin(Math.PI * Math.min(1, p * 1.15));
+      const alpha = Math.min(1, p * 5) * Math.min(1, (1 - p) * 4);
+      const tx = hx - DX * tl, ty = hy - DY * tl;
+      const gr = ctx.createLinearGradient(hx, hy, tx, ty);
+      gr.addColorStop(0, `rgba(210,225,255,${alpha})`);
+      gr.addColorStop(.25, `rgba(${m.hue},${alpha * .8})`);
+      gr.addColorStop(1, `rgba(${m.hue},0)`);
+      ctx.strokeStyle = gr; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(tx, ty); ctx.stroke();
+      const sh = 14 * (0.6 + 0.4 * Math.sin(age * 9)) * alpha;
+      for (const a of [ANG + Math.PI / 4, ANG - Math.PI / 4]) {
+        const cx = Math.cos(a) * sh, cy = Math.sin(a) * sh;
+        const sg = ctx.createLinearGradient(hx - cx, hy - cy, hx + cx, hy + cy);
+        sg.addColorStop(0, `rgba(${m.hue},0)`); sg.addColorStop(.5, `rgba(235,240,255,${alpha})`); sg.addColorStop(1, `rgba(${m.hue},0)`);
+        ctx.strokeStyle = sg; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(hx - cx, hy - cy); ctx.lineTo(hx + cx, hy + cy); ctx.stroke();
+      }
+      ctx.globalAlpha = alpha; ctx.fillStyle = 'rgba(200,220,255,.9)';
+      ctx.beginPath(); ctx.arc(hx, hy, 1.6, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+    }
+    if (meteors.length > target) meteors.length = target;
+  }
+
+  function draw(ts) {
+    const t = ts / 1000;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, fx.width, fx.height);
+    const visibleSky = SKY_H - window.scrollY;     // las fugaces sólo en la parte del cielo
+    if (visibleSky > 0) {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, Math.min(H, visibleSky)); ctx.clip();
+      ctx.globalCompositeOperation = 'lighter';
+      drawMeteors(t);
+      ctx.restore();
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    requestAnimationFrame(draw);
+  }
+
+  /* ================= Flores ================= */
+  const NS = 'http://www.w3.org/2000/svg';
+  const garden = document.getElementById('garden');
+  const flowersG = document.getElementById('flowers');
+  let bloomTimers = [], GH = 0;
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+  const later = (fn, ms) => bloomTimers.push(setTimeout(fn, ms));
+
+  // Dibuja un trazo como si creciera
+  function growStroke(path, delay, dur) {
+    const L = path.getTotalLength();
+    path.style.strokeDasharray = L; path.style.strokeDashoffset = L;
+    path.animate([{ strokeDashoffset: L }, { strokeDashoffset: 0 }],
+      { duration: dur, delay, easing: 'cubic-bezier(.35,.1,.25,1)', fill: 'forwards' });
+  }
+
+  // Zarcillo que se enrolla en espiral en sentido horario
+  function spiralPath(x, y, heading, size) {
+    let px = x, py = y, h = heading, k = 0.012;
+    const ds = 2, pts = [`M${x.toFixed(1)} ${y.toFixed(1)}`];
+    for (let i = 0; i < 95; i++) {
+      h += k * ds * (34 / size);     // curvatura positiva = giro horario en pantalla
+      k *= 1.045;
+      if (k > 0.5) break;
+      px += Math.cos(h) * ds * size / 34; py += Math.sin(h) * ds * size / 34;
+      pts.push(`L${px.toFixed(1)} ${py.toFixed(1)}`);
+    }
+    return pts.join(' ');
+  }
+
+  function starPath(r) {
+    let d = '';
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.42 : r;
+      d += (i ? 'L' : 'M') + (Math.cos(a) * rr).toFixed(2) + ' ' + (Math.sin(a) * rr).toFixed(2);
+    }
+    return d + 'Z';
+  }
+
+  function petalPath(r, w) {
+    return `M0 0 C${r*w} ${-r*0.25}, ${r*w*1.05} ${-r*0.8}, 0 ${-r} C${-r*w*1.05} ${-r*0.8}, ${-r*w} ${-r*0.25}, 0 0Z`;
+  }
+
+  function makeFlower(x0, height, size, startDelay) {
+    const g = el('g', {}, flowersG);
+    const yBase = GH + 4;
+    const yTop = yBase - height;
+    const s = Math.min(70, height * 0.22);
+
+    // Tallo: empieza inclinado a la izquierda y gira hacia la derecha (horario)
+    const xTop = x0 + s * 0.55;
+    const d = `M${x0} ${yBase} C${x0 - s} ${yBase - height * 0.35}, ${x0 - s * 0.6} ${yBase - height * 0.7}, ${x0 + s * 0.15} ${yTop + height * 0.12} S${xTop} ${yTop + 10}, ${xTop} ${yTop}`;
+    const stem = el('path', { d, fill: 'none', stroke: '#2f8f5b', 'stroke-width': Math.max(2.4, size * 0.09), 'stroke-linecap': 'round' }, g);
+    const stemDur = 2300;
+    growStroke(stem, startDelay, stemDur);
+    const L = stem.getTotalLength();
+
+    // Zarcillos en espiral y hojas a lo largo del tallo
+    const marks = [0.32, 0.5, 0.68];
+    marks.forEach((t, i) => {
+      const p = stem.getPointAtLength(L * t);
+      const p2 = stem.getPointAtLength(L * t + 1);
+      const tang = Math.atan2(p2.y - p.y, p2.x - p.x);
+      const side = i % 2 ? 1 : -1;
+      const reachDelay = startDelay + stemDur * t * 0.9;
+      if (i !== 1) {
+        const heading = tang + side * 0.9;
+        const tendril = el('path', { d: spiralPath(p.x, p.y, heading, size * 0.75), fill: 'none',
+          stroke: '#5fcf8e', 'stroke-width': 1.6, 'stroke-linecap': 'round', opacity: .9 }, g);
+        growStroke(tendril, reachDelay, 1300);
+      }
+      // hoja
+      const leafAng = (tang + side * 1.0) * 180 / Math.PI + 90;
+      const leafG = el('g', { transform: `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${leafAng.toFixed(1)})` }, g);
+      g.insertBefore(leafG, stem);
+      const leaf = el('path', { d: petalPath(size * 0.55, 0.42), fill: '#2e9a63', opacity: .95, class: 'leaf' }, leafG);
+      leaf.animate([{ transform: 'scale(0)' }, { transform: 'scale(1)' }],
+        { duration: 700, delay: reachDelay + 150, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'both' });
+    });
+
+    // Flor: los pétalos aparecen uno a uno, girando en sentido horario
+    const head = el('g', { transform: `translate(${xTop.toFixed(1)} ${yTop.toFixed(1)})` }, g);
+    const bloomAt = startDelay + stemDur;
+    const outer = 8, inner = 6, R = size;
+    const rot0 = rand(0, 45);
+    for (let i = 0; i < outer; i++) {
+      const a = rot0 + i * 360 / outer;
+      const pet = el('path', { d: petalPath(R, 0.5), fill: 'url(#petalGrad)', stroke: 'rgba(230,200,255,.5)', 'stroke-width': .8, class: 'petal' }, head);
+      pet.animate([{ transform: `rotate(${a - 50}deg) scale(0)`, opacity: 0 },
+                   { transform: `rotate(${a}deg) scale(1)`, opacity: 1 }],
+        { duration: 650, delay: bloomAt + i * 130, easing: 'cubic-bezier(.25,1.3,.5,1)', fill: 'both' });
+    }
+    for (let i = 0; i < inner; i++) {
+      const a = rot0 + 30 + i * 360 / inner;
+      const pet = el('path', { d: petalPath(R * 0.62, 0.48), fill: 'url(#petalGrad2)', class: 'petal' }, head);
+      pet.animate([{ transform: `rotate(${a - 50}deg) scale(0)`, opacity: 0 },
+                   { transform: `rotate(${a}deg) scale(1)`, opacity: 1 }],
+        { duration: 600, delay: bloomAt + outer * 130 + i * 110, easing: 'cubic-bezier(.25,1.3,.5,1)', fill: 'both' });
+    }
+    const core = el('circle', { r: R * 0.17, fill: 'url(#coreGrad)', filter: 'url(#glow)', class: 'core' }, head);
+    const petalsDone = bloomAt + outer * 130 + inner * 110 + 300;
+    core.animate([{ transform: 'scale(0)' }, { transform: 'scale(1)' }],
+      { duration: 500, delay: petalsDone - 200, easing: 'cubic-bezier(.3,1.6,.5,1)', fill: 'both' });
+
+    // Estrellitas amarillas sobre los pétalos
+    for (let i = 0; i < outer; i++) {
+      const a = (rot0 + i * 360 / outer - 90) * Math.PI / 180;
+      const rr = R * rand(0.55, 0.75);
+      const st = el('path', { d: starPath(R * 0.085 + 1.2), fill: '#ffe066', filter: 'url(#glow)', class: 'ystar' }, head);
+      const tx = (Math.cos(a) * rr).toFixed(1), ty = (Math.sin(a) * rr).toFixed(1);
+      st.animate([{ transform: `translate(${tx}px,${ty}px) scale(0) rotate(-90deg)` },
+                  { transform: `translate(${tx}px,${ty}px) scale(1) rotate(0deg)` }],
+        { duration: 500, delay: petalsDone + i * 90, easing: 'cubic-bezier(.3,1.6,.5,1)', fill: 'both' });
+      const twinkle = st.animate([{ opacity: 1 }, { opacity: .35 }, { opacity: 1 }],
+        { duration: rand(1200, 2200), delay: petalsDone + 900 + i * 90, iterations: Infinity });
+    }
+    // Brillitos flotando alrededor
+    for (let i = 0; i < 5; i++) {
+      const a = rand(0, Math.PI * 2), rr = R * rand(1.2, 1.9);
+      const tx = (Math.cos(a) * rr).toFixed(1), ty = (Math.sin(a) * rr).toFixed(1);
+      const st = el('path', { d: starPath(rand(2, 3.6)), fill: '#fff1a6', class: 'ystar' }, head);
+      st.animate([{ transform: `translate(${tx}px,${ty}px) scale(0)`, opacity: 0 },
+                  { transform: `translate(${tx}px,${Number(ty) - 8}px) scale(1)`, opacity: 1, offset: .4 },
+                  { transform: `translate(${tx}px,${Number(ty) - 20}px) scale(.4)`, opacity: 0 }],
+        { duration: rand(2400, 3400), delay: petalsDone + 300 + i * 400, iterations: Infinity, fill: 'backwards' });
+    }
+  }
+
+  function bloom() {
+    clearGarden(true);
+    garden.classList.remove('fading');
+    const fin = document.getElementById('finale').getBoundingClientRect();
+    GH = fin.height;
+    garden.setAttribute('viewBox', `0 0 ${W} ${GH}`);
+    const er = document.getElementById('envWrap').getBoundingClientRect();
+    const envR = { left: er.left - fin.left, right: er.right - fin.left, bottom: er.bottom - fin.top };
+    const narrow = W < 640;
+    const xs = narrow ? [0.04, 0.14, 0.95] : [0.04, 0.12, 0.2, 0.28, 0.72, 0.8, 0.88, 0.96];
+    xs.forEach((f, i) => {
+      const x = f * W;
+      const overlapsEnv = x > envR.left - 40 && x < envR.right + 40;
+      const topLimit = overlapsEnv ? envR.bottom + 70 : GH * 0.2;
+      const maxH = GH - topLimit;
+      const height = Math.max(90, Math.min(maxH, GH * rand(0.28, 0.55)));
+      const size = Math.max(16, Math.min(narrow ? 26 : 36, height * 0.12));
+      makeFlower(x, height, size, 200 + i * 260);
+    });
+  }
+
+  function clearGarden(now) {
+    bloomTimers.forEach(clearTimeout); bloomTimers = [];
+    if (now) { flowersG.innerHTML = ''; return; }
+    garden.classList.add('fading');
+    later(() => { flowersG.innerHTML = ''; garden.classList.remove('fading'); }, 1000);
+  }
+
+  /* ================= Sobre y carta ================= */
+  const env = document.getElementById('env');
+  const hint = document.getElementById('hint');
+  const btnRead = document.getElementById('btnRead');
+  const btnClose = document.getElementById('btnClose');
+  const reader = document.getElementById('reader');
+  let isOpen = false;
+
+  function openEnv() {
+    if (isOpen) return;
+    isOpen = true;
+    env.classList.add('open');
+    env.setAttribute('aria-label', 'Leer la carta');
+    hint.hidden = true; btnRead.hidden = false; btnClose.hidden = false;
+    bloom();
+  }
+  function closeEnv() {
+    if (!isOpen) return;
+    isOpen = false;
+    closeReader();
+    env.classList.remove('open');
+    env.setAttribute('aria-label', 'Abrir la carta');
+    hint.hidden = false; btnRead.hidden = true; btnClose.hidden = true;
+    clearGarden(false);
+  }
+  function openReader() { reader.classList.add('show'); reader.setAttribute('aria-hidden', 'false'); }
+  function closeReader() { reader.classList.remove('show'); reader.setAttribute('aria-hidden', 'true'); }
+
+  env.addEventListener('click', () => isOpen ? openReader() : openEnv());
+  env.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); isOpen ? openReader() : openEnv(); } });
+  btnRead.addEventListener('click', openReader);
+  btnClose.addEventListener('click', closeEnv);
+  document.getElementById('closeX').addEventListener('click', closeReader);
+  document.getElementById('btnStore').addEventListener('click', closeEnv);
+  reader.addEventListener('click', e => { if (e.target === reader) closeReader(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeReader(); });
+
+  /* ================= Pasto ================= */
+  (function grass() {
+    const gG = document.getElementById('grass');
+    const lights = [606, 908];
+    let d = '';
+    const blades = [];
+    for (let x = -10; x < 1450; x += 2.2) {
+      const near = Math.min(...lights.map(l => Math.abs(l - x)));
+      const base = 362;
+      const h = rand(10, 34) * (x > 540 && x < 960 ? 0.7 : 1);
+      const lean = rand(-7, 7);
+      blades.push({ x, base, h, lean, warm: Math.max(0, 1 - near / 180) });
+    }
+    for (const bl of blades) {
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const tx = bl.x + bl.lean, ty = bl.base - bl.h;
+      p.setAttribute('d', `M${bl.x - 1.2} ${bl.base} Q${bl.x + bl.lean * 0.3} ${bl.base - bl.h * 0.6} ${tx} ${ty} Q${bl.x + bl.lean * 0.35 + 0.8} ${bl.base - bl.h * 0.55} ${bl.x + 1.2} ${bl.base} Z`);
+      const w = bl.warm;
+      const r = Math.round(14 + 70 * w), g = Math.round(12 + 45 * w), b2 = Math.round(26 + 8 * w);
+      p.setAttribute('fill', `rgb(${r},${g},${b2})`);
+      gG.appendChild(p);
+    }
+  })();
+
+  /* ================= Luna realista (se dibuja con código) ================= */
+  function renderMoon(cv) {
+    const disp = cv.getBoundingClientRect().width || 260;
+    const S = Math.min(760, Math.round(disp * Math.min(window.devicePixelRatio || 1, 2.5)));
+    cv.width = cv.height = S;
+    const T = 1024;                       // textura en latitud/longitud de la cara visible
+    const deg = T / 180;
+    const P = (lon, lat) => [(lon / 90 * 0.5 + 0.5) * T, (-lat / 90 * 0.5 + 0.5) * T];
+
+    // ruido suave para la textura
+    const perm = new Uint8Array(512); { const p = [...Array(256).keys()];
+      for (let i = 255; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [p[i], p[j]] = [p[j], p[i]]; }
+      for (let i = 0; i < 512; i++) perm[i] = p[i & 255]; }
+    const fade = t => t * t * (3 - 2 * t);
+    const hash = (x, y) => perm[(perm[x & 255] + y) & 511] / 255;
+    const vnoise = (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+      const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+      const u = fade(xf), v = fade(yf); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; };
+    const fbm = (x, y) => { let s = 0, amp = .5, f = 1; for (let o = 0; o < 5; o++) { s += amp * vnoise(x * f, y * f); f *= 2.03; amp *= .5; } return s; };
+
+    const A = document.createElement('canvas'); A.width = A.height = T; const a = A.getContext('2d');
+    const Hm = document.createElement('canvas'); Hm.width = Hm.height = T; const h = Hm.getContext('2d');
+    h.fillStyle = 'rgb(128,128,128)'; h.fillRect(0, 0, T, T);
+
+    // mares (las manchas oscuras) en su posición aproximada real: se dibujan pequeños y se amplían para que queden suaves
+    const maria = [
+      [-57, 18, 30, 30, .85], [-44, -4, 14, 16, .8], [-16, 33, 18, 14, 1], [17, 28, 11, 10, 1], [31, 8, 14, 11, 1],
+      [59, 17, 8, 7, 1], [51, -6, 8, 11, .9], [35, -15, 6, 7, .9], [-17, -21, 12, 9, .85], [-39, -24, 6, 6, .9],
+      [-24, -9, 7, 6, .75], [-31, 7, 9, 7, .75], [4, 13, 5, 4, .75], [2, 2, 5, 4, .55], [3, 56, 30, 5, .75], [-55, 45, 12, 5, .6],
+      [86, 0, 4, 9, .7], [78, 22, 5, 6, .6], [-60, 35, 10, 10, .7]
+    ];
+    const MS = 160, M = document.createElement('canvas'); M.width = M.height = MS; const mk = M.getContext('2d');
+    mk.fillStyle = '#000'; mk.fillRect(0, 0, MS, MS);
+    const Pm = (lon, lat) => [(lon / 90 * 0.5 + 0.5) * MS, (-lat / 90 * 0.5 + 0.5) * MS];
+    for (const [lon, lat, rx, ry, st] of maria) {
+      for (let i = 0; i < 40; i++) {
+        const [x, y] = Pm(lon + gauss() * rx * .5, lat + gauss() * ry * .5);
+        const r = rand(.35, .7) * Math.min(rx, ry) * MS / 180 * 1.6;
+        const g = mk.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, `rgba(255,255,255,${.3 * st})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+        mk.fillStyle = g; mk.beginPath(); mk.arc(x, y, r, 0, Math.PI * 2); mk.fill();
+      }
+    }
+    const Mb = document.createElement('canvas'); Mb.width = Mb.height = T; const mb = Mb.getContext('2d');
+    mb.imageSmoothingEnabled = true; mb.imageSmoothingQuality = 'high';
+    mb.drawImage(M, 0, 0, T, T);
+    const md = mb.getImageData(0, 0, T, T).data;
+    const base = a.createImageData(T, T), bd = base.data;
+    for (let y = 0; y < T; y++) for (let x = 0; x < T; x++) {
+      const i = (y * T + x) * 4;
+      const n = fbm(x / 60, y / 60), n3 = fbm(x / 22 + 9, y / 22 + 3);
+      let mv = md[i] / 255 + (n - .5) * .32;                           // borde irregular de los mares
+      mv = Math.max(0, Math.min(1, (mv - .12) / .62)); mv = mv * mv * (3 - 2 * mv);
+      const high = 0.80 + 0.14 * (n3 - .5) + 0.08 * (n - .5);           // tierras altas claras
+      const mare = 0.5 + 0.12 * (n3 - .5) + 0.12 * (fbm(x / 140, y / 140) - .5);
+      const v = high * (1 - mv) + mare * mv;
+      bd[i] = v * 238; bd[i + 1] = v * 234; bd[i + 2] = v * (226 + mv * 10); bd[i + 3] = 255;
+    }
+    a.putImageData(base, 0, 0);
+
+    // cráteres
+    const crater = (lon, lat, rDeg, fresh, darkFloor) => {
+      const [x, y] = P(lon, lat); const r = rDeg * deg;
+      const hg = h.createRadialGradient(x, y, 0, x, y, r * 1.18);
+      hg.addColorStop(0, 'rgba(60,60,60,.55)'); hg.addColorStop(.62, 'rgba(95,95,95,.45)');
+      hg.addColorStop(.82, 'rgba(225,225,225,.55)'); hg.addColorStop(1, 'rgba(128,128,128,0)');
+      h.fillStyle = hg; h.beginPath(); h.arc(x, y, r * 1.18, 0, Math.PI * 2); h.fill();
+      if (r > 6 && Math.random() < .5) { // pico central
+        const cg = h.createRadialGradient(x, y, 0, x, y, r * .18);
+        cg.addColorStop(0, 'rgba(200,200,200,.6)'); cg.addColorStop(1, 'rgba(128,128,128,0)');
+        h.fillStyle = cg; h.beginPath(); h.arc(x, y, r * .18, 0, Math.PI * 2); h.fill();
+      }
+      const ag = a.createRadialGradient(x, y, r * .2, x, y, r * 1.15);
+      const floor = darkFloor ? 'rgba(80,80,88,.55)' : fresh ? 'rgba(255,255,250,.35)' : 'rgba(150,148,145,.12)';
+      ag.addColorStop(0, floor); ag.addColorStop(.8, fresh ? 'rgba(255,255,250,.3)' : 'rgba(150,148,145,.05)');
+      ag.addColorStop(.92, `rgba(255,255,250,${fresh ? .45 : .12})`); ag.addColorStop(1, 'rgba(255,255,250,0)');
+      a.fillStyle = ag; a.beginPath(); a.arc(x, y, r * 1.15, 0, Math.PI * 2); a.fill();
+    };
+    for (let i = 0; i < 900; i++) {
+      const lon = rand(-89, 89), lat = rand(-89, 89);
+      const r = Math.min(9, 0.25 / Math.pow(Math.random() * .97 + .03, 0.75));
+      const south = lat < -10 ? 1.6 : 1;                      // el sur tiene más cráteres
+      if (Math.random() > .55 * south) continue;
+      crater(lon, lat, r, Math.random() < .06, false);
+    }
+    // cráteres famosos
+    crater(-11.4, -43.3, 2.6, true); crater(-20, 9.6, 2.7, true); crater(-38, 8.1, 1.1, true);
+    crater(-47.4, 23.7, 0.9, true); crater(-9.4, 51.6, 3, false, true); crater(-68.6, -5.2, 4.6, false, true);
+    crater(-14, -58.4, 6.5, false); crater(-3, -13, 3.6, false); crater(-1, -9, 2.9, false); crater(9.8, 16, 1.2, true);
+
+    // rayos brillantes (Tycho, Copérnico, Kepler)
+    a.globalCompositeOperation = 'screen';
+    const rays = (lon, lat, n, minL, maxL, alpha) => {
+      const [x, y] = P(lon, lat);
+      for (let i = 0; i < n; i++) {
+        const ang = rand(0, Math.PI * 2), L = rand(minL, maxL) * deg;
+        const g = a.createLinearGradient(x, y, x + Math.cos(ang) * L, y + Math.sin(ang) * L);
+        g.addColorStop(0, `rgba(255,255,250,${alpha})`); g.addColorStop(1, 'rgba(255,255,250,0)');
+        a.strokeStyle = g; a.lineWidth = rand(1.5, 5);
+        a.beginPath(); a.moveTo(x, y); a.lineTo(x + Math.cos(ang) * L, y + Math.sin(ang) * L); a.stroke();
+      }
+    };
+    rays(-11.4, -43.3, 34, 12, 55, .16); rays(-20, 9.6, 22, 6, 20, .12); rays(-38, 8.1, 14, 4, 12, .1); rays(-47.4, 23.7, 8, 3, 8, .1);
+    a.globalCompositeOperation = 'source-over';
+
+    // textura fina
+    const ad = a.getImageData(0, 0, T, T), hd = h.getImageData(0, 0, T, T);
+    for (let y = 0; y < T; y++) for (let x = 0; x < T; x++) {
+      const i = (y * T + x) * 4;
+      const n = fbm(x / 70, y / 70), n2 = fbm(x / 9 + 50, y / 9);
+      const m = 0.97 + 0.06 * (n - .5) + 0.06 * (n2 - .5);
+      ad.data[i] *= m; ad.data[i + 1] *= m; ad.data[i + 2] *= m;
+      hd.data[i] += (n2 - .5) * 26;
+    }
+    const AL = ad.data, HT = hd.data;
+    const samp = (arr, u, v) => {
+      u = Math.min(T - 2, Math.max(0, u)); v = Math.min(T - 2, Math.max(0, v));
+      const x0 = u | 0, y0 = v | 0, fx2 = u - x0, fy2 = v - y0, i = (y0 * T + x0) * 4;
+      const a0 = arr[i] + (arr[i + 4] - arr[i]) * fx2, a1 = arr[i + T * 4] + (arr[i + T * 4 + 4] - arr[i + T * 4]) * fx2;
+      return a0 + (a1 - a0) * fy2;
+    };
+
+    // proyección a una esfera con luz casi frontal (luna llena)
+    const o = cv.getContext('2d'); const out = o.createImageData(S, S); const D = out.data;
+    const R = S / 2 - 0.5, c = S / 2;
+    let Lx = -0.05, Ly = -0.04, Lz = 1; const Ln = Math.hypot(Lx, Ly, Lz); Lx /= Ln; Ly /= Ln; Lz /= Ln;
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+      const dx = (x + .5 - c) / R, dy = (y + .5 - c) / R, r2 = dx * dx + dy * dy;
+      if (r2 > 1.0 + 2 / R) continue;
+      const nz = Math.sqrt(Math.max(0, 1 - r2));
+      const lat = Math.asin(Math.max(-1, Math.min(1, -dy))), lon = Math.atan2(dx, nz);
+      const u = (lon / (Math.PI / 2) * .5 + .5) * T, v = (-lat / (Math.PI / 2) * .5 + .5) * T;
+      const alb = samp(AL, u, v) / 255;
+      const gx = samp(HT, u + 1, v) - samp(HT, u - 1, v), gy = samp(HT, u, v + 1) - samp(HT, u, v - 1);
+      const mu0 = Math.max(0, dx * Lx + dy * Ly + nz * Lz), mu = Math.max(0.0001, nz);
+      const ls = mu0 > 0 ? 2 * mu0 / (mu0 + mu) : 0;               // Lommel-Seeliger: brillo real de la luna
+      const bump = 1 + 0.006 * (gx * 0.6 + gy * 0.45) * (0.4 + 0.6 * nz);
+      const limb = 0.9 + 0.1 * Math.pow(nz, .35);
+      const b = Math.max(0, alb * ls * bump * limb * 1.12);
+      const i = (y * S + x) * 4;
+      D[i] = Math.min(255, b * 252); D[i + 1] = Math.min(255, b * 248); D[i + 2] = Math.min(255, b * (238 + (1 - alb) * 30));
+      D[i + 3] = 255 * Math.max(0, Math.min(1, (1 - Math.sqrt(r2)) * R + .5));
+    }
+    o.putImageData(out, 0, 0);
+  }
+
+  const moonCv = document.getElementById('moon');
+  const you = document.getElementById('you');
+  let moonDone = false;
+  function ensureMoon() { if (!moonDone) { moonDone = true; renderMoon(moonCv); } }
+  // se dibuja con tiempo, antes de que llegue a verse
+  const ioPre = new IntersectionObserver((es) => { if (es.some(e => e.isIntersecting)) { ensureMoon(); ioPre.disconnect(); } }, { rootMargin: '120% 0px' });
+  ioPre.observe(you);
+  const ioShow = new IntersectionObserver((es) => {
+    es.forEach(e => { if (e.isIntersecting) { ensureMoon(); you.classList.add('show'); ioShow.disconnect(); } });
+  }, { threshold: 0.55 });
+  ioShow.observe(you);
+
+  /* ================= Álbum de fotos ================= */
+  const book = document.getElementById('book');
+  const counter = document.getElementById('albumCount');
+  let current = 0, nLeaves = 0, pages = [];
+  const leaves = [];
+
+  // busca fotos nuevas (foto8.jpg, foto9.jpg…) aunque no estén en la lista
+  const EXTS = ['jpg', 'jpeg', 'png', 'webp', 'JPG', 'JPEG', 'PNG'];
+  const exists = (src) => new Promise(res => { const im = new Image(); im.onload = () => res(true); im.onerror = () => res(false); im.src = src; });
+  // lee la fecha en que se tomó la foto (datos EXIF del archivo .jpg)
+  async function exifDate(src) {
+    try {
+      const r = await fetch(src); if (!r.ok) return '';
+      const v = new DataView(await r.arrayBuffer());
+      if (v.getUint16(0) !== 0xFFD8) return '';
+      let o = 2;
+      while (o < v.byteLength - 10) {
+        const m = v.getUint16(o), len = v.getUint16(o + 2);
+        if (m === 0xFFE1 && v.getUint32(o + 4) === 0x45786966) {
+          const t = o + 10, le = v.getUint16(t) === 0x4949;
+          const u16 = q => v.getUint16(q, le), u32 = q => v.getUint32(q, le);
+          const str = (q, n) => { let x = ''; for (let i = 0; i < n - 1; i++) x += String.fromCharCode(v.getUint8(q + i)); return x; };
+          const scan = (ifd) => { const n = u16(t + ifd), f = {};
+            for (let i = 0; i < n; i++) { const e = t + ifd + 2 + i * 12, tag = u16(e), cnt = u32(e + 4), val = u32(e + 8);
+              if (tag === 0x9003 || tag === 0x0132) f[tag] = str(t + val, cnt);
+              if (tag === 0x8769) f.exif = val; }
+            return f; };
+          const f0 = scan(u32(t + 4)); let d = f0[0x0132] || '';
+          if (f0.exif) d = scan(f0.exif)[0x9003] || d;
+          return /^\d{4}:\d{2}:\d{2}/.test(d) ? d.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3') : '';
+        }
+        if ((m & 0xFF00) !== 0xFF00) break;
+        o += 2 + len;
+      }
+    } catch (e) {}
+    return '';
+  }
+  function fmtFecha(f) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(f || '');
+    return m ? `${m[3]}/${m[2]}/${m[1]}` : '';
+  }
+  const ordenar = (list) => list.map((f, i) => ({ ...f, _i: i }))
+    .sort((a, b) => ((a.fecha || '9999') < (b.fecha || '9999') ? -1 : (a.fecha || '9999') > (b.fecha || '9999') ? 1 : a._i - b._i));
+
+  async function findExtraPhotos() {
+    const extra = [];
+    for (let n = FOTOS.length + 1; n < FOTOS.length + 200; n++) {
+      let found = null;
+      for (const e of EXTS) { if (await exists(`foto${n}.${e}`)) { found = `foto${n}.${e}`; break; } }
+      if (!found) break;
+      extra.push({ src: found, fecha: '' });
+    }
+    return extra;
+  }
+
+  function pageHTML(p, side) {
+    if (p.type === 'cover') return `<div class="cover"><div class="cover-in"><span class="c-moon"></span><h4>${ALBUM_TITULO}</h4><p>${ALBUM_SUBTITULO}</p><small>toca para abrir</small></div></div>`;
+    if (p.type === 'end') return `<div class="cover end"><div class="cover-in"><h4>Continuará…</h4><p>quedan muchas fotos por tomar juntos ♥</p></div></div>`;
+    if (p.type === 'blank') return `<div class="pg ${side}"><span class="doodle d1">✦</span><span class="doodle d2">☾</span></div>`;
+    const rot = ((p.n * 37) % 9 - 4) * 0.9;
+    return `<div class="pg ${side}">
+      <span class="doodle d1">✦</span><span class="doodle d2">✧</span>
+      <figure class="pol" style="--r:${rot}deg"><span class="tape"></span>
+        <div class="ph" data-src="${p.src || ''}" data-n="${p.n}"></div>
+        <figcaption>${fmtFecha(p.fecha)}</figcaption></figure>
+      <span class="pnum">${p.n}</span></div>`;
+  }
+
+  function buildBook(list) {
+    pages = [{ type: 'cover' }, ...list.map((f, i) => ({ type: 'photo', n: i + 1, ...f }))];
+    if (pages.length % 2 === 0) pages.push({ type: 'blank' });
+    pages.push({ type: 'end' });
+    nLeaves = pages.length / 2;
+    book.innerHTML = ''; leaves.length = 0; current = 0;
+    for (let i = 0; i < nLeaves; i++) {
+      const leaf = document.createElement('div');
+      leaf.className = 'leaf';
+      leaf.innerHTML = `<div class="face front">${pageHTML(pages[2 * i], 'right')}</div><div class="face back">${pageHTML(pages[2 * i + 1], 'left')}</div>`;
+      leaf.querySelector('.front').addEventListener('click', () => { if (i === current) next(); });
+      leaf.querySelector('.back').addEventListener('click', () => { if (i === current - 1) prev(); });
+      book.appendChild(leaf); leaves.push(leaf);
+    }
+    // fotos: si el archivo no existe se muestra un recuadro "Tu foto aquí"
+    book.querySelectorAll('.ph').forEach(ph => {
+      const src = ph.dataset.src;
+      const showEmpty = () => { ph.classList.add('empty'); ph.innerHTML = `<span>📷</span><b>Tu foto aquí</b><em>${src || 'foto' + ph.dataset.n + '.jpg'}</em>`; };
+      if (!src) return showEmpty();
+      const img = new Image(); img.alt = ''; img.decoding = 'async';
+      img.onload = () => { ph.innerHTML = ''; ph.appendChild(img); };
+      img.onerror = showEmpty;
+      img.src = src;
+    });
+    updateBook();
+  }
+  function updateBook() {
+    leaves.forEach((l, i) => {
+      l.classList.toggle('flipped', i < current);
+      l.style.zIndex = i < current ? i + 1 : 2 * nLeaves - i;
+    });
+    book.classList.toggle('at-front', current === 0);
+    book.classList.toggle('at-back', current === nLeaves);
+    const total = pages.filter(p => p.type === 'photo').length;
+    const photosShown = current === 0 ? 'Portada' : current === nLeaves ? 'Fin' : (Math.min(2 * current, total) > 2 * current - 1 ? `Fotos ${2 * current - 1}–${Math.min(2 * current, total)} de ${total}` : `Foto ${2 * current - 1} de ${total}`);
+    counter.textContent = photosShown;
+  }
+  function turn(i) { leaves[i].style.zIndex = 3 * nLeaves; }
+  function next() { if (current >= nLeaves) return; turn(current); current++; leaves[current - 1].classList.add('flipped'); setTimeout(updateBook, 1150); book.classList.toggle('at-front', false); book.classList.toggle('at-back', current === nLeaves); counter.textContent = '…'; }
+  function prev() { if (current <= 0) return; current--; turn(current); leaves[current].classList.remove('flipped'); setTimeout(updateBook, 1150); book.classList.toggle('at-back', false); book.classList.toggle('at-front', current === 0); counter.textContent = '…'; }
+  document.getElementById('albPrev').addEventListener('click', prev);
+  document.getElementById('albNext').addEventListener('click', next);
+  let sx = null;
+  book.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+  book.addEventListener('touchend', e => {
+    if (sx === null) return; const d = e.changedTouches[0].clientX - sx; sx = null;
+    if (Math.abs(d) > 40) { d < 0 ? next() : prev(); }
+  });
+  buildBook(ordenar(FOTOS));
+  (async () => {
+    const extra = await findExtraPhotos();
+    const all = [...FOTOS, ...extra].map(f => ({ ...f }));
+    let changed = extra.length > 0;
+    for (const f of all) if (!f.fecha) { const d = await exifDate(f.src); if (d) { f.fecha = d; changed = true; } }
+    if (changed && current === 0) buildBook(ordenar(all));
+  })();
+
+  // mensaje final: aparece letra por letra y luego "respira" suavemente
+  (function whisper() {
+    const el = document.getElementById('whisper');
+    let i = 0;
+    el.innerHTML = el.textContent.split(' ').map(w => `<span class="w">${[...w].map(ch => `<span class="c" style="--i:${i++}">${ch}</span>`).join('')}</span>`).join(' ');
+    const io = new IntersectionObserver((es) => {
+      if (es.some(e => e.isIntersecting)) {
+        el.classList.add('show'); io.disconnect();
+        setTimeout(() => el.classList.add('glow'), i * 45 + 900);
+      }
+    }, { threshold: 0.6 });
+    io.observe(el);
+  })();
+
+  document.getElementById('toTop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  /* ================= Diseño de la página ================= */
+  let lastW = 0;
+  function sizeAlbum() {
+    const vw = document.documentElement.clientWidth;
+    const pw = Math.floor(Math.min(880, vw - 28) / 2);
+    const ph = Math.round(Math.min(pw * 1.42, window.innerHeight * 0.74));
+    book.style.setProperty('--pw', pw + 'px'); book.style.setProperty('--ph', ph + 'px');
+  }
+  function fullLayout() {
+    document.documentElement.style.setProperty('--vh', window.innerHeight + 'px');
+    lastW = document.documentElement.clientWidth;
+    sizeAlbum();
+    buildSky();
+    sizeFx();
+  }
+  let rt;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => {
+      if (document.documentElement.clientWidth !== lastW) { fullLayout(); if (isOpen) bloom(); }
+      else sizeFx();      // en el celular la barra del navegador sólo cambia el alto: no se rehace nada
+    }, 200);
+  });
+  // si cambia el alto de la página (por ejemplo al cargar las letras), se ajusta el cielo
+  let ro;
+  new ResizeObserver(() => { clearTimeout(ro); ro = setTimeout(() => { if (Math.abs(world.offsetHeight - DOC_H) > 4) buildSky(); }, 250); }).observe(world);
+  fullLayout();
+  requestAnimationFrame(draw);
+
+  /* ================= Música (Spotify) ================= */
+  const music = document.getElementById('music');
+  const musicBtn = document.getElementById('musicBtn');
+  const start = document.getElementById('start');
+  let ctrl = null, wantPlay = false, playing = false, lastPos = 0, restarting = false;
+  const setPlaying = (p) => { playing = p; musicBtn.classList.toggle('playing', p); };
+
+  window.onSpotifyIframeApiReady = (IFrameAPI) => {
+    IFrameAPI.createController(document.getElementById('spotify'),
+      { uri: SPOTIFY_URI, width: '100%', height: 80 },
+      (c) => {
+        ctrl = c;
+        c.addListener('ready', () => { if (wantPlay) c.play(); });
+        c.addListener('playback_update', (e) => {
+          const { isPaused, position, duration } = e.data;
+          setPlaying(!isPaused);
+          // al terminar la canción (o la vista previa) vuelve a empezar: suena en bucle
+          if (duration > 0 && wantPlay && !restarting && (position >= duration - 700 || (isPaused && lastPos > 0 && position === 0))) {
+            restarting = true;
+            setTimeout(() => { c.seek(0); c.resume(); restarting = false; }, 400);
+          }
+          lastPos = position;
+        });
+      });
+  };
+  const sp = document.createElement('script');
+  sp.src = 'https://open.spotify.com/embed/iframe-api/v1'; sp.async = true;
+  document.head.appendChild(sp);
+
+  function playMusic() {
+    wantPlay = true;
+    if (ctrl) ctrl.play();
+  }
+
+  function begin() {
+    start.classList.add('gone');
+    playMusic();
+    window.scrollTo(0, 0);
+  }
+  start.addEventListener('click', begin);
+  start.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); begin(); } });
+
+  musicBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    music.classList.toggle('expanded');
+    if (!playing) playMusic();
+  });
+})();
+</script>
+</body>
+</html>
