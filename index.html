@@ -594,15 +594,25 @@ const ALBUM_TITULO = 'Pequeño álbum';
 const ALBUM_SUBTITULO = 'Odiosa';
 const FOTOS = [
   // fecha: 'AAAA-MM-DD' (y la hora si quieres, para ordenar fotos del mismo día)
+  // texto: 'una frase' → se muestra en lugar de la fecha
   { src: 'foto1.jpg', fecha: '2026-09-18' },
   { src: 'foto2.jpg', fecha: '2026-09-21' },
   { src: 'foto3.jpg', fecha: '2026-10-05 16:24:11' },
   { src: 'foto4.jpg', fecha: '2026-09-30 11:09:32' },
   { src: 'foto5.jpg', fecha: '2026-10-05 16:24:34' },
-  { src: 'foto6.jpg', fecha: '2026-10-05 16:10:05' },   
+  { src: 'foto6.jpg', fecha: '2026-10-05 16:10:05' },
   { src: 'foto7.jpg', fecha: '2026-09-21 11:10:01' },
   { src: 'foto8.jpg', fecha: '2026-10-08 10:25:46' },
-  { src: 'foto9.jpg', fecha: '2026-10-08 10:24:30' },  
+  { src: 'foto9.jpg', fecha: '2026-10-08 10:24:30' },
+  { src: 'foto10.jpg', texto: 'I Miss You' },
+  { src: 'foto11.jpg', fecha: '2026-10-14' },
+  { src: 'foto12.jpg', fecha: '2026-10-14' },
+  { src: 'foto13.jpg', fecha: '2026-10-13' },
+  { src: 'foto14.jpg', fecha: '2026-10-13' },
+  { src: 'foto15.jpg', fecha: '2026-10-13' },
+  { src: 'foto16.jpg', fecha: '2026-10-11' },
+  { src: 'foto17.jpg', texto: 'I like you' },
+  { src: 'foto18.jpg', texto: 'I like you' },
 ];
 
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -1222,7 +1232,7 @@ if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
       <span class="doodle d1">✦</span><span class="doodle d2">✧</span>
       <figure class="pol" style="--r:${rot}deg"><span class="tape"></span>
         <div class="ph" data-src="${p.src || ''}" data-n="${p.n}"></div>
-        <figcaption>${fmtFecha(p.fecha)}</figcaption></figure>
+        <figcaption>${p.texto || fmtFecha(p.fecha)}</figcaption></figure>
       <span class="pnum">${p.n}</span></div>`;
   }
 
